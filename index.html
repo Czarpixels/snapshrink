@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SnapShrink — private, in-browser image compressor</title>
+  <meta name="description" content="Compress, resize and convert images entirely in your browser. Nothing is uploaded — 100% local and private." />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%2310b981'/%3E%3Cpath d='M9 20l4-5 3 3 3-4 4 6z' fill='white'/%3E%3Ccircle cx='12' cy='11' r='2' fill='white'/%3E%3C/svg%3E" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="logo" aria-hidden="true">
+        <svg viewBox="0 0 32 32" width="28" height="28"><rect width="32" height="32" rx="8" fill="var(--accent)"/><path d="M9 20l4-5 3 3 3-4 4 6z" fill="#fff"/><circle cx="12" cy="11" r="2" fill="#fff"/></svg>
+      </span>
+      <div>
+        <h1>SnapShrink</h1>
+        <p class="tag">Compress images in your browser · nothing uploaded</p>
+      </div>
+    </div>
+    <a class="ghlink" href="https://github.com/" target="_blank" rel="noopener" data-repo>
+      <svg viewBox="0 0 16 16" width="18" height="18" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+        Star on GitHub
+    </a>
+  </header>
+
+  <main>
+    <!-- Drop zone -->
+    <section id="dropzone" class="dropzone" tabindex="0" aria-label="Drop images here or click to browse">
+      <input id="fileInput" type="file" accept="image/*" multiple hidden />
+      <div class="dz-inner">
+        <svg class="dz-icon" viewBox="0 0 24 24" width="46" height="46" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        <p class="dz-title">Drop images here</p>
+        <p class="dz-sub">or <button type="button" id="browseBtn" class="linkbtn">browse your files</button> · JPEG, PNG, WebP, GIF</p>
+        <p class="dz-privacy">🔒 Everything runs locally. Your images never leave this device.</p>
+      </div>
+    </section>
+
+    <!-- Controls -->
+    <section id="controls" class="controls" hidden>
+      <div class="control">
+        <label for="format">Output format</label>
+        <select id="format">
+          <option value="keep">Keep original</option>
+          <option value="image/jpeg">JPEG</option>
+          <option value="image/webp" selected>WebP (smallest)</option>
+          <option value="image/png">PNG (lossless)</option>
+          <option value="image/avif">AVIF (if supported)</option>
+        </select>
+      </div>
+      <div class="control quality-control">
+        <label for="quality">Quality <span id="qualityVal" class="mono">80</span></label>
+        <input id="quality" type="range" min="10" max="100" step="1" value="80" />
+      </div>
+      <div class="control">
+        <label for="maxDim">Max width/height</label>
+        <select id="maxDim">
+          <option value="0">Don't resize</option>
+          <option value="3840">4K · 3840px</option>
+          <option value="2560">2560px</option>
+          <option value="1920" selected>1080p · 1920px</option>
+          <option value="1280">1280px</option>
+          <option value="800">800px</option>
+        </select>
+      </div>
+      <div class="control actions">
+        <button id="downloadAll" class="btn primary">Download all (.zip)</button>
+        <button id="clearAll" class="btn ghost">Clear</button>
+      </div>
+    </section>
+
+    <!-- Summary -->
+    <section id="summary" class="summary" hidden>
+      <div class="stat"><span class="stat-num" id="statCount">0</span><span class="stat-lbl">images</span></div>
+      <div class="stat"><span class="stat-num" id="statBefore">0</span><span class="stat-lbl">original</span></div>
+      <div class="stat"><span class="stat-num" id="statAfter">0</span><span class="stat-lbl">compressed</span></div>
+      <div class="stat saved"><span class="stat-num" id="statSaved">0%</span><span class="stat-lbl">saved</span></div>
+    </section>
+
+    <!-- Results grid -->
+    <section id="grid" class="grid" aria-live="polite"></section>
+  </main>
+
+  <footer class="foot">
+    <p>Free &amp; open source · MIT. No servers, no tracking, no upload — verify it in DevTools ▸ Network.</p>
+  </footer>
+
+  <!-- Card template -->
+  <template id="cardTpl">
+    <article class="card">
+      <div class="thumb"><img alt="" /></div>
+      <div class="meta">
+        <p class="name" title=""></p>
+        <div class="sizes">
+          <span class="before mono"></span>
+          <span class="arrow">→</span>
+          <span class="after mono">…</span>
+          <span class="pill">…</span>
+        </div>
+        <div class="bar"><span class="bar-fill"></span></div>
+      </div>
+      <div class="card-actions">
+        <button class="btn small dl" disabled>Download</button>
+        <button class="btn small ghost rm" title="Remove">✕</button>
+      </div>
+    </article>
+  </template>
+
+  <script src="zip.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

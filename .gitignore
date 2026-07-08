@@ -1,0 +1,7 @@
+# SnapShrink is a plain static site — nothing to build.
+.DS_Store
+Thumbs.db
+*.log
+.vscode/
+.idea/
+node_modules/
